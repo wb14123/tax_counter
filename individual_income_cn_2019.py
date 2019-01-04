@@ -64,15 +64,16 @@ def min_tax(
         monthly_salary = start_point + deduction + p
         bonus = all_salary - 12 * monthly_salary
         if bonus < 0:
-            monthly_salary = all_salary / 12.0
-            bonus = 0
+            break
         count_points.append((monthly_salary, bonus))
+    count_points.append((all_salary/12.0, 0))
+    for p in points:
         bonus = 12 * p
         monthly_salary = (all_salary - bonus) / 12.0
         if monthly_salary < 0:
-            bonus = all_salary
-            monthly_salary = 0
+            break
         count_points.append((monthly_salary, bonus))
+    count_points.append((0, all_salary))
 
     min_tax_result = all_salary + 1
     min_monthly_salary = None
@@ -82,7 +83,7 @@ def min_tax(
         if monthly_salary < 0 or bonus < 0:
             continue
         tax = count_tax(start_point, tax_rates, monthly_salary, bonus, deduction)
-        print("M: %f\tB:%f\tT:%f\t" % (monthly_salary, bonus, tax))
+        # print("M: %f\tB:%f\tT:%f\t" % (monthly_salary, bonus, tax))
         if min_tax_result > tax:
             min_tax_result = tax
             min_monthly_salary = monthly_salary
@@ -131,9 +132,30 @@ def draw_tax_2019():
 
 
 def draw_min_tax_2019():
-    for all_salary in range(0, 10000000, 12000):
+    min_taxes = []
+    all_salaries = []
+    after_taxes = []
+    avoid_taxes = []
+    bonuses = []
+    for all_salary in range(0, 5000000, 12000):
         tax, monthly_salary, bonus = min_tax(monthly_start_point_2019, tax_rates_2019, all_salary, 0)
+        raw_tax = count_tax_2019(all_salary / 12.0, 0, 0)
         print("All: %f\ttax: %f\tmonthly: %f\tbonus: %f" % (all_salary, tax, monthly_salary, bonus))
+        all_salaries.append(all_salary)
+        min_taxes.append(tax)
+        after_taxes.append(all_salary-tax)
+        avoid_taxes.append(raw_tax - tax)
+        bonuses.append(bonus)
+    plt.plot(all_salaries, all_salaries, label="Salary per year")
+    plt.plot(all_salaries, min_taxes, label="Minimal tax")
+    plt.plot(all_salaries, after_taxes, label="Salary after tax")
+    plt.plot(all_salaries, avoid_taxes, label="Avoided tax")
+    plt.plot(all_salaries, bonuses, label="Best bones divid")
+    plt.xlabel('Salary per year')
+    plt.ylabel('Money')
+    plt.title("Tax Counter")
+    plt.legend()
+    plt.show()
 
 
 # draw_tax_2019()
