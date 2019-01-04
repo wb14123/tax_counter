@@ -38,7 +38,7 @@ def min_tax_2019(year_salary, monthly_deduction):
 
 根据年薪的年终奖优化方案：
 
-
+![salary](https://user-images.githubusercontent.com/1906051/50687819-b1a69c80-105d-11e9-9218-4229a1fe596f.png)
 
 ## TODO
 
