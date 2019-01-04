@@ -7,6 +7,9 @@ from matplotlib import cm
 from matplotlib.ticker import LinearLocator, FormatStrFormatter
 from mpl_toolkits.mplot3d import Axes3D
 
+# 中华人民共和国个人所得税法: http://www.chinatax.gov.cn/n810341/n810755/c3967308/content.html
+# 关于个人所得税法修改后有关优惠政策衔接问题的通知:
+# http://www.chinatax.gov.cn/n810341/n810755/c3978994/content.html
 
 @dataclass
 class TaxRate:
@@ -92,9 +95,6 @@ def min_tax(
     return min_tax_result, min_monthly_salary, min_bonus
 
 
-# 中华人民共和国个人所得税法: http://www.chinatax.gov.cn/n810341/n810755/c3967308/content.html
-# 关于个人所得税法修改后有关优惠政策衔接问题的通知:
-# http://www.chinatax.gov.cn/n810341/n810755/c3978994/content.html
 tax_rates_2019 = [
     TaxRate(None, 3000, 0.03, 0),
     TaxRate(3000, 12000, 0.1, 210),
@@ -109,8 +109,25 @@ monthly_start_point_2019 = 60000 / 12.0
 
 
 def count_tax_2019(monthly_salary, bonus, deduction):
+    """
+    计算个人所得税
+    :param monthly_salary: 月薪
+    :param bonus: 年终奖
+    :param deduction: 每月专项扣除
+    :return: 全年需要缴纳的个人所得税
+    """
     return count_tax(monthly_start_point_2019, tax_rates_2019, monthly_salary,
                      bonus, deduction)
+
+
+def min_tax_2019(year_salary, monthly_deduction):
+    """
+    计算最优的年终奖方案
+    :param year_salary: 年薪
+    :param monthly_deduction: 每月专项扣除
+    :return: (全年需要缴纳的个人所得税, 月薪, 年终奖)
+    """
+    return min_tax(monthly_start_point_2019, tax_rates_2019, year_salary, monthly_deduction)
 
 
 def draw_tax_2019():
@@ -137,8 +154,8 @@ def draw_min_tax_2019():
     after_taxes = []
     avoid_taxes = []
     bonuses = []
-    for all_salary in range(0, 5000000, 12000):
-        tax, monthly_salary, bonus = min_tax(monthly_start_point_2019, tax_rates_2019, all_salary, 0)
+    for all_salary in range(0, 3000000, 12000):
+        tax, monthly_salary, bonus = min_tax_2019(all_salary, 0)
         raw_tax = count_tax_2019(all_salary / 12.0, 0, 0)
         print("All: %f\ttax: %f\tmonthly: %f\tbonus: %f" % (all_salary, tax, monthly_salary, bonus))
         all_salaries.append(all_salary)
@@ -159,4 +176,4 @@ def draw_min_tax_2019():
 
 
 # draw_tax_2019()
-draw_min_tax_2019()
+# draw_min_tax_2019()
