@@ -29,7 +29,7 @@ def find_tax_rate(tax_rates: List[TaxRate], salary: float) -> Optional[TaxRate]:
         if ((r.start is None or r.start < salary)
                 and (r.end is None or r.end >= salary)):
             return r
-    return None
+    raise Exception("Cannot find tax rate")
 
 
 def count_tax(
@@ -40,12 +40,55 @@ def count_tax(
         deduction: float,  # 专项扣除
 ) -> float:
     monthly_need_tax = monthly_salary - count_social_insurance(monthly_salary) - start_point - deduction
+    if monthly_need_tax < 0:
+        monthly_need_tax = 0
     monthly_tax_rate = find_tax_rate(tax_rates, monthly_need_tax)
     monthly_tax = monthly_need_tax * monthly_tax_rate.rate - monthly_tax_rate.deduction
     bonus_tax_rate = find_tax_rate(tax_rates, bonus / 12.0)
     # The bonus tax result is not the accumulated tax, it is what the law says, not a bug
     bonus_tax = bonus * bonus_tax_rate.rate - bonus_tax_rate.deduction
-    return monthly_tax + bonus_tax
+    return 12 * monthly_tax + bonus_tax
+
+
+def min_tax(
+        start_point: float,  # 月薪起征点
+        tax_rates: List[TaxRate],  # 税率表
+        all_salary: float,
+        deduction: float,  # 专项扣除
+) -> (float, float, float):
+    points = [r.start for r in tax_rates if r.start is not None]
+    points.append(0)
+    count_points = []
+
+    for p in points:
+        monthly_salary = start_point + deduction + p
+        bonus = all_salary - 12 * monthly_salary
+        if bonus < 0:
+            monthly_salary = all_salary / 12.0
+            bonus = 0
+        count_points.append((monthly_salary, bonus))
+        bonus = 12 * p
+        monthly_salary = (all_salary - bonus) / 12.0
+        if monthly_salary < 0:
+            bonus = all_salary
+            monthly_salary = 0
+        count_points.append((monthly_salary, bonus))
+
+    min_tax_result = all_salary + 1
+    min_monthly_salary = None
+    min_bonus = None
+
+    for (monthly_salary, bonus) in count_points:
+        if monthly_salary < 0 or bonus < 0:
+            continue
+        tax = count_tax(start_point, tax_rates, monthly_salary, bonus, deduction)
+        print("M: %f\tB:%f\tT:%f\t" % (monthly_salary, bonus, tax))
+        if min_tax_result > tax:
+            min_tax_result = tax
+            min_monthly_salary = monthly_salary
+            min_bonus = bonus
+
+    return min_tax_result, min_monthly_salary, min_bonus
 
 
 # 中华人民共和国个人所得税法: http://www.chinatax.gov.cn/n810341/n810755/c3967308/content.html
@@ -87,4 +130,11 @@ def draw_tax_2019():
     plt.show()
 
 
-draw_tax_2019()
+def draw_min_tax_2019():
+    for all_salary in range(0, 10000000, 12000):
+        tax, monthly_salary, bonus = min_tax(monthly_start_point_2019, tax_rates_2019, all_salary, 0)
+        print("All: %f\ttax: %f\tmonthly: %f\tbonus: %f" % (all_salary, tax, monthly_salary, bonus))
+
+
+# draw_tax_2019()
+draw_min_tax_2019()
